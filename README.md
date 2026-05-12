@@ -11,80 +11,101 @@ authorName: 'Serverless, Inc.'
 authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
 -->
 
-# Serverless Framework Node Express API on AWS
+## mazen-poll — Serverless Polls API
 
-This template demonstrates how to develop and deploy a simple Node Express API service, backed by DynamoDB table, running on AWS Lambda using the Serverless Framework.
+خدمة صغيرة مبنية بـ Serverless على AWS لتخزين وإدارة استطلاعات رأي بسيطة في DynamoDB.
 
-This template configures a single function, `api`, which is responsible for handling all incoming requests using the `httpApi` event. To learn more about `httpApi` event configuration options, please refer to [httpApi event docs](https://www.serverless.com/framework/docs/providers/aws/events/http-api/). As the event is configured in a way to accept all incoming requests, the Express.js framework is responsible for routing and handling requests internally. This implementation uses the `serverless-http` package to transform the incoming event request payloads to payloads compatible with Express.js. To learn more about `serverless-http`, please refer to the [serverless-http README](https://github.com/dougmoscrop/serverless-http).
+هذا المشروع يعرّف مجموعة من الـ Lambda handlers في `src/poll` وتُعرّف في [serverless.yml](serverless.yml) لتوفير واجهة HTTP بسيطة لإدارة الاستطلاعات.
 
-Additionally, it also handles provisioning of a DynamoDB database that is used for storing data about users. The Express.js application exposes two endpoints, `POST /users` and `GET /user/:userId`, which create and retrieve a user record.
+**مميزات المشروع**:
+- إنشاء استطلاع جديد
+- استرجاع واستعراض الاستطلاعات
+- تصويت على خيار داخل استطلاع
+- حساب النتائج (نسب مئوية)
+- توليد رابط وQR للاستطلاع
+- إرسال النتائج إلى ClickUp (اختياري)
 
-## Usage
+**مهم — المتغيرات البيئية**
+- `POLLS_TABLE` : اسم جدول DynamoDB (مكوّن في `serverless.yml` كـ `polls-table-dev`).
+- `FRONTEND_URL` : رابط الواجهة الأمامية المستخدم لتوليد روابط الاستطلاع وQR.
+- `CLICKUP_TOKEN`, `CLICKUP_WORKSPACE_ID`, `CLICKUP_CHANNEL_ID` : مطلوبة فقط لو أردت استخدام endpoint إرسال النتائج إلى ClickUp.
 
-### Deployment
+### الوظائف وطرق الـ HTTP
 
-Install dependencies with:
+الطرق مضبوطة في [serverless.yml](serverless.yml). المسارات الأساسية:
 
+- `POST /poll` — `createPoll` — إنشاء استطلاع جديد
+  - Body (JSON): `{ "question": "...", "options": ["opt1", "opt2", ...] }`
+  - يستجيب بـ `201` ويعيد كائن الاستطلاع مع `id`, `options` (كل خيار له `id` و`votes`).
+
+- `GET /poll` — `listPolls` — استرجاع كل الاستطلاعات
+
+- `GET /poll/{id}` — `getPoll` — استرجاع تفاصيل استطلاع معين
+
+- `POST /poll/{id}/vote` — `votePoll` — تسجيـل تصويت
+  - Body (JSON): `{ "optionId": "<option-id>" }`
+  - يستجيب بـ `200` عند النجاح.
+
+- `GET /poll/{id}/results` — `getResults` — حساب النتائج والنسب المئوية
+
+- `GET /poll/{id}/link` — `getPollLink` — إرجاع رابط واجهة المستخدم للموضوع وبيانات QR (Data URL)
+
+- `POST /poll/{id}/send` — `sendResults` — إرسال نتائج الاستطلاع إلى قناة ClickUp (يحتاج متغيرات ClickUp)
+
+### أمثلة سريعّة
+
+إنشاء استطلاع:
+
+```bash
+curl -X POST https://<api>/poll \
+  -H "Content-Type: application/json" \
+  -d '{"question":"ما هو أفضل لغة؟","options":["JavaScript","Python","Go"]}'
 ```
+
+التصويت لخيار:
+
+```bash
+curl -X POST https://<api>/poll/<pollId>/vote \
+  -H "Content-Type: application/json" \
+  -d '{"optionId":"<optionId>"}'
+```
+
+جلب النتائج:
+
+```bash
+curl https://<api>/poll/<pollId>/results
+```
+
+جلب رابط وQR:
+
+```bash
+curl https://<api>/poll/<pollId>/link
+```
+
+### الإعداد والتشغيل
+
+1. تثبيت الحزم:
+
+```bash
 npm install
 ```
 
-and then deploy with:
+2. تشغيل محليًا (Serverless Framework dev):
 
-```
-serverless deploy
-```
-
-After running deploy, you should see output similar to:
-
-```
-Deploying "aws-node-express-dynamodb-api" to stage "dev" (us-east-1)
-
-✔ Service deployed to stack aws-node-express-dynamodb-api-dev (109s)
-
-endpoint: ANY - https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com
-functions:
-  api: aws-node-express-dynamodb-api-dev-api (3.8 MB)
+```bash
+npx serverless dev
 ```
 
-_Note_: In current form, after deployment, your API is public and can be invoked by anyone. For production deployments, you might want to configure an authorizer. For details on how to do that, refer to [`httpApi` event docs](https://www.serverless.com/framework/docs/providers/aws/events/http-api/). Additionally, in current configuration, the DynamoDB table will be removed when running `serverless remove`. To retain the DynamoDB table even after removal of the stack, add `DeletionPolicy: Retain` to its resource definition.
+3. نشر إلى AWS:
 
-### Invocation
-
-After successful deployment, you can create a new user by calling the corresponding endpoint:
-
-```
-curl --request POST 'https://xxxxxx.execute-api.us-east-1.amazonaws.com/users' --header 'Content-Type: application/json' --data-raw '{"name": "John", "userId": "someUserId"}'
+```bash
+npx serverless deploy
 ```
 
-Which should result in the following response:
+### ملاحظات تنفيذية
+- جدول DynamoDB معرف في `serverless.yml` باسم `polls-table-dev` ويحتوي على المفتاح الأساسي `id`.
+- عملية إنشاء الاستطلاع تُنشئ `id` عشوائي لكل استطلاع ولكل خيار، وتبدأ الأصوات (`votes`) من صفر.
+- نقطة إرسال النتائج (`/poll/{id}/send`) تتطلب إعداد متغيرات ClickUp في بيئة النشر.
+- مسار توليد الـ QR يستخدم `FRONTEND_URL` لبناء رابط الواجهة الأمامية.
 
-```json
-{ "userId": "someUserId", "name": "John" }
-```
-
-You can later retrieve the user by `userId` by calling the following endpoint:
-
-```
-curl https://xxxxxxx.execute-api.us-east-1.amazonaws.com/users/someUserId
-```
-
-Which should result in the following response:
-
-```json
-{ "userId": "someUserId", "name": "John" }
-```
-
-### Local development
-
-The easiest way to develop and test your function is to use the `dev` command:
-
-```
-serverless dev
-```
-
-This will start a local emulator of AWS Lambda and tunnel your requests to and from AWS Lambda, allowing you to interact with your function as if it were running in the cloud.
-
-Now you can invoke the function as before, but this time the function will be executed locally. Now you can develop your function locally, invoke it, and see the results immediately without having to re-deploy.
-
-When you are done developing, don't forget to run `serverless deploy` to deploy the function to the cloud.
+إذا تحب، أقدر أضيف أمثلة استجابة فعلية، أو أعدّل ملف الـ README بالعربية أو الإنجليزية بشكل أوضح حسب رغبتك.
