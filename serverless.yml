@@ -1,0 +1,100 @@
+org: mazen0serverless
+service: mazen-poll
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+
+  httpApi:
+    cors:
+      allowedOrigins:
+        - "*"
+      allowedMethods:
+        - GET
+        - POST
+        - OPTIONS
+      allowedHeaders:
+        - Content-Type
+
+  environment:
+    POLLS_TABLE: polls-table-dev
+    FRONTEND_URL: http://mazen-s3-poll-serverless.s3-website.eu-north-1.amazonaws.com
+    CLICKUP_TOKEN: ${env:CLICKUP_TOKEN}
+    CLICKUP_CHANNEL_ID: ${env:CLICKUP_CHANNEL_ID}
+    CLICKUP_WORKSPACE_ID: ${env:CLICKUP_WORKSPACE_ID}
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:Scan
+            - dynamodb:UpdateItem
+          Resource: "*"
+
+functions:
+  createPoll:
+    handler: src/poll/createPoll.handler
+    events:
+      - httpApi:
+          path: /poll
+          method: POST
+
+  getPoll:
+    handler: src/poll/getPoll.handler
+    events:
+      - httpApi:
+          path: /poll/{id}
+          method: GET
+
+  listPolls:
+    handler: src/poll/listPolls.handler
+    events:
+      - httpApi:
+          path: /poll
+          method: GET
+
+  votePoll:
+    handler: src/poll/votePoll.handler
+    events:
+      - httpApi:
+          path: /poll/{id}/vote
+          method: POST
+
+  getResults:
+    handler: src/poll/getResults.handler
+    events:
+      - httpApi:
+          path: /poll/{id}/results
+          method: GET
+
+  getPollLink:
+    handler: src/poll/getPollLink.handler
+    events:
+      - httpApi:
+          path: /poll/{id}/link
+          method: GET
+
+  sendResults:
+    handler: src/poll/sendResults.handler
+    events:
+      - httpApi:
+          path: /poll/{id}/send
+          method: POST
+
+resources:
+  Resources:
+    PollsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: polls-table-dev
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
