@@ -102,6 +102,44 @@ npx serverless dev
 npx serverless deploy
 ```
 
+4. إعداد متغيرات البيئة (`.env`)
+
+نسخة مثال لملف المتغيرات موجودة في `.env.example`. أنسخ الملف واملأ القيم المطلوبة قبل النشر أو التشغيل المحلي:
+
+```bash
+# copy on Windows PowerShell
+Copy-Item .env.example .env
+
+# copy on macOS / Linux
+cp .env.example .env
+```
+
+ستحتاج على الأقل إلى ملء:
+
+- `POLLS_TABLE` — اسم جدول DynamoDB (افتراضي: `polls-table-dev`)
+- `FRONTEND_URL` — رابط الواجهة الأمامية لتوليد روابط الاستطلاع وQR
+- ClickUp vars (اختياري): `CLICKUP_TOKEN`, `CLICKUP_WORKSPACE_ID`, `CLICKUP_CHANNEL_ID`
+
+لتعيين متغيرات بيئة لجلسة PowerShell مؤقتًا قبل النشر، مثلاً:
+
+```powershell
+$env:CLICKUP_TOKEN = "your_token_here"
+$env:CLICKUP_WORKSPACE_ID = "your_workspace_id"
+$env:CLICKUP_CHANNEL_ID = "your_channel_id"
+npx serverless deploy
+```
+
+أو على macOS / Linux:
+
+```bash
+export CLICKUP_TOKEN="your_token_here"
+export CLICKUP_WORKSPACE_ID="your_workspace_id"
+export CLICKUP_CHANNEL_ID="your_channel_id"
+npx serverless deploy
+```
+
+ملاحظة: لا تقم بضغط أو تخزين مفاتيح حساسة في نظام التحكم بالإصدارات.
+
 ### ملاحظات تنفيذية
 - جدول DynamoDB معرف في `serverless.yml` باسم `polls-table-dev` ويحتوي على المفتاح الأساسي `id`.
 - عملية إنشاء الاستطلاع تُنشئ `id` عشوائي لكل استطلاع ولكل خيار، وتبدأ الأصوات (`votes`) من صفر.
