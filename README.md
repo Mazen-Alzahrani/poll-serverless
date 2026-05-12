@@ -18,6 +18,7 @@ authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
 هذا المشروع يعرّف مجموعة من الـ Lambda handlers في `src/poll` وتُعرّف في [serverless.yml](serverless.yml) لتوفير واجهة HTTP بسيطة لإدارة الاستطلاعات.
 
 **مميزات المشروع**:
+
 - إنشاء استطلاع جديد
 - استرجاع واستعراض الاستطلاعات
 - تصويت على خيار داخل استطلاع
@@ -26,6 +27,7 @@ authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
 - إرسال النتائج إلى ClickUp (اختياري)
 
 **مهم — المتغيرات البيئية**
+
 - `POLLS_TABLE` : اسم جدول DynamoDB (مكوّن في `serverless.yml` كـ `polls-table-dev`).
 - `FRONTEND_URL` : رابط الواجهة الأمامية المستخدم لتوليد روابط الاستطلاع وQR.
 - `CLICKUP_TOKEN`, `CLICKUP_WORKSPACE_ID`, `CLICKUP_CHANNEL_ID` : مطلوبة فقط لو أردت استخدام endpoint إرسال النتائج إلى ClickUp.
@@ -141,9 +143,8 @@ npx serverless deploy
 ملاحظة: لا تقم بضغط أو تخزين مفاتيح حساسة في نظام التحكم بالإصدارات.
 
 ### ملاحظات تنفيذية
+
 - جدول DynamoDB معرف في `serverless.yml` باسم `polls-table-dev` ويحتوي على المفتاح الأساسي `id`.
 - عملية إنشاء الاستطلاع تُنشئ `id` عشوائي لكل استطلاع ولكل خيار، وتبدأ الأصوات (`votes`) من صفر.
 - نقطة إرسال النتائج (`/poll/{id}/send`) تتطلب إعداد متغيرات ClickUp في بيئة النشر.
 - مسار توليد الـ QR يستخدم `FRONTEND_URL` لبناء رابط الواجهة الأمامية.
-
-إذا تحب، أقدر أضيف أمثلة استجابة فعلية، أو أعدّل ملف الـ README بالعربية أو الإنجليزية بشكل أوضح حسب رغبتك.
