@@ -3,7 +3,7 @@ const QRCode = require("qrcode");
 exports.handler = async (event) => {
   try {
     const pollId = event.pathParameters?.id;
-
+// validate poll id
     if (!pollId) {
       return {
         statusCode: 400,
@@ -13,9 +13,11 @@ exports.handler = async (event) => {
 
     const FRONTEND_URL =
       process.env.FRONTEND_URL || "http://localhost:5173";
-
+    
+    // generate poll link
     const url = `${FRONTEND_URL}/poll/${pollId}`;
 
+    // generate QR code
     const qr = await QRCode.toDataURL(url);
 
     return {
@@ -35,3 +37,5 @@ exports.handler = async (event) => {
     };
   }
 };
+
+//return poll link and QR code for the given poll id

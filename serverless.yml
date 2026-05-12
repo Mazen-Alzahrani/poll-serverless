@@ -1,6 +1,7 @@
 org: mazen0serverless
 service: mazen-poll
 
+# // server configuration for AWS Lambda using Serverless Framework
 provider:
   name: aws
   runtime: nodejs20.x

@@ -44,6 +44,7 @@ exports.handler = async (event) => {
       statusCode: 200,
       body: JSON.stringify(poll),
     };
+    
   } catch (err) {
     console.error("GET POLL ERROR:", err);
 

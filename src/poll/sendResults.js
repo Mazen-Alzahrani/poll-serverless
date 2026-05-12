@@ -118,3 +118,4 @@ ${resultsText}
     };
   }
 };
+// send poll results to clickup channel for the given poll id

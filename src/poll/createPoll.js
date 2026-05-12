@@ -1,8 +1,5 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
-const {
-  DynamoDBDocumentClient,
-  PutCommand,
-} = require("@aws-sdk/lib-dynamodb");
+const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
 
 const { randomUUID } = require("crypto");
 
@@ -11,6 +8,7 @@ const db = DynamoDBDocumentClient.from(client);
 
 const TABLE = process.env.POLLS_TABLE;
 
+// handler is guide that connects API Gateway to our Lambda function, it receives events and returns responses, determining which code to execute based on the incoming request and its parameters
 exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body || "{}");
@@ -44,7 +42,7 @@ exports.handler = async (event) => {
       new PutCommand({
         TableName: TABLE,
         Item: poll,
-      })
+      }),
     );
 
     return {
